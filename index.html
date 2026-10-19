@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pronoun Position Detectives</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Google Fonts: Fredoka & Quicksand -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            fredoka: ['Fredoka', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
+          },
+          colors: {
+            skyBlue: '#38bdf8',
+            trainBlue: '#2563eb',
+            trainRed: '#ef4444',
+            trainYellow: '#f59e0b',
+            elephantSoft: '#93c5fd',
+            sunnyBg: '#f0f9ff'
+          },
+          animation: {
+            bounceSlow: 'bounce 2.2s infinite',
+            wiggle: 'wiggle 0.4s ease-in-out',
+            pulseGlow: 'pulseGlow 1.5s infinite',
+            float: 'float 3s ease-in-out infinite'
+          },
+          keyframes: {
+            wiggle: {
+              '0%, 100%': { transform: 'translateX(0) rotate(0deg)' },
+              '25%': { transform: 'translateX(-8px) rotate(-5deg)' },
+              '75%': { transform: 'translateX(8px) rotate(5deg)' }
+            },
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 15px rgba(34, 197, 94, 0.6)' },
+              '50%': { boxShadow: '0 0 25px rgba(34, 197, 94, 0.95)' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-8px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      background: radial-gradient(circle at top left, #e0f2fe, #f0fdf4, #fefce8);
+      min-height: 100vh;
+    }
+    h1, h2, h3, .comic-font {
+      font-family: 'Fredoka', cursive, sans-serif;
+    }
+    .train-track {
+      background: repeating-linear-gradient(90deg, #78350f 0px, #78350f 12px, transparent 12px, transparent 38px);
+      height: 12px;
+      border-top: 4px solid #451a03;
+      border-bottom: 4px solid #451a03;
+    }
+    .draggable-card {
+      touch-action: none;
+      cursor: grab;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .draggable-card:active {
+      cursor: grabbing;
+      transform: scale(1.08) rotate(3deg);
+    }
+    .mirror-card {
+      perspective: 1000px;
+    }
+    .mirror-inner {
+      transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .mirror-inner.flipped {
+      transform: rotateY(180deg);
+    }
+    .mirror-front, .mirror-back {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .mirror-back {
+      transform: rotateY(180deg);
+    }
+    /* custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #93c5fd;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="text-slate-800 flex flex-col justify-between p-2 md:p-5 antialiased selection:bg-amber-200">
+
+  <!-- TOP HEADER & NAVIGATION -->
+  <header class="max-w-6xl w-full mx-auto bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-xl border-4 border-sky-200 flex flex-wrap items-center justify-between gap-4 mb-4">
+    <!-- Brand / Mascot Header -->
+    <div class="flex items-center gap-3">
+      <div class="w-14 h-14 bg-blue-100 rounded-2xl border-2 border-blue-300 flex items-center justify-center shadow-inner relative group cursor-pointer" onclick="speakElephant('Hello young detectives! I am Flying Elephant Teacher Ellie. Let us discover pronoun positions!')">
+        <svg class="w-12 h-12 animate-float" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cute Flying Elephant SVG -->
+          <circle cx="50" cy="52" r="32" fill="#93C5FD"/>
+          <!-- Wings -->
+          <ellipse cx="22" cy="38" rx="14" ry="8" fill="#FDE047" transform="rotate(-20 22 38)"/>
+          <ellipse cx="78" cy="38" rx="14" ry="8" fill="#FDE047" transform="rotate(20 78 38)"/>
+          <!-- Big Ears -->
+          <ellipse cx="24" cy="50" rx="12" ry="16" fill="#BFDBFE"/>
+          <ellipse cx="76" cy="50" rx="12" ry="16" fill="#BFDBFE"/>
+          <!-- Cheeks -->
+          <circle cx="36" cy="58" r="5" fill="#F472B6" opacity="0.6"/>
+          <circle cx="64" cy="58" r="5" fill="#F472B6" opacity="0.6"/>
+          <!-- Eyes -->
+          <circle cx="40" cy="48" r="4.5" fill="#1E293B"/>
+          <circle cx="42" cy="46" r="1.5" fill="#FFF"/>
+          <circle cx="60" cy="48" r="4.5" fill="#1E293B"/>
+          <circle cx="62" cy="46" r="1.5" fill="#FFF"/>
+          <!-- Trunk -->
+          <path d="M 48 56 Q 50 72 62 70 Q 64 65 54 62" stroke="#60A5FA" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <!-- Detective Hat -->
+          <path d="M 32 30 L 68 30 L 62 18 L 38 18 Z" fill="#B45309"/>
+          <rect x="26" y="29" width="48" height="5" rx="2.5" fill="#D97706"/>
+          <ellipse cx="50" cy="24" rx="4" ry="2" fill="#FDE047"/>
+        </svg>
+        <span class="absolute -bottom-1 -right-1 bg-amber-400 text-xs px-1.5 py-0.5 rounded-full font-bold shadow text-amber-900">2A</span>
+      </div>
+      <div>
+        <h1 class="text-2xl md:text-3xl font-extrabold text-blue-700 tracking-wide flex items-center gap-2">
+          Pronoun Position Detectives
+          <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold border border-amber-300">Ch 3 Our Teachers</span>
+        </h1>
+        <p class="text-sm font-semibold text-slate-500">Discover <span class="text-blue-600 font-bold">Subject Pronouns</span> vs <span class="text-amber-600 font-bold">Object Pronouns</span> by playing!</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+      <button id="nav-stage1" onclick="switchStage(1)" class="nav-btn px-4 py-2 rounded-xl text-sm font-bold transition-all bg-blue-600 text-white shadow-md flex items-center gap-1.5">
+        <span>🚂</span> Stage 1: Discovery
+      </button>
+      <button id="nav-stage2" onclick="switchStage(2)" class="nav-btn px-4 py-2 rounded-xl text-sm font-bold transition-all text-slate-600 hover:text-blue-600 flex items-center gap-1.5">
+        <span>🪞</span> Stage 2: Magic Mirror
+      </button>
+      <button id="nav-stage3" onclick="switchStage(3)" class="nav-btn px-4 py-2 rounded-xl text-sm font-bold transition-all text-slate-600 hover:text-blue-600 flex items-center gap-1.5">
+        <span>🎮</span> Stage 3: Mini-Games
+      </button>
+    </div>
+
+    <!-- Badge & Sound Controls -->
+    <div class="flex items-center gap-2">
+      <button onclick="toggleAudio()" id="sound-btn" class="p-2.5 rounded-2xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold text-sm border border-amber-300 flex items-center gap-1 shadow-sm" title="Toggle Sound / TTS Voice">
+        <span id="sound-icon">🔊</span> Voice & SFX
+      </button>
+      <div class="flex items-center gap-1 bg-yellow-50 px-3 py-1.5 rounded-2xl border-2 border-yellow-300">
+        <span class="text-xl">⭐</span>
+        <span id="star-count" class="font-extrabold text-amber-600 text-lg">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MASCOT GUIDANCE BANNER -->
+  <div class="max-w-6xl w-full mx-auto mb-4 bg-gradient-to-r from-blue-500 via-indigo-500 to-sky-500 rounded-3xl p-4 shadow-lg text-white flex items-center justify-between gap-4 relative overflow-hidden">
+    <div class="flex items-center gap-3 z-10">
+      <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-3xl">
+        🐘
+      </div>
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-yellow-200">Flying Elephant Teacher Ellie says:</div>
+        <div id="mascot-speech" class="text-base md:text-lg font-bold">
+          "Welcome! Drag the cards into the Sentence Train to see what happens!"
+        </div>
+      </div>
+    </div>
+    <button onclick="speakElephantCurrent()" class="z-10 bg-yellow-400 hover:bg-yellow-300 text-amber-900 font-extrabold px-3 py-1.5 rounded-2xl text-xs md:text-sm shadow flex items-center gap-1 transition-transform active:scale-95">
+      <span>🗣️</span> Listen
+    </button>
+    <!-- Background bubble deco -->
+    <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 pointer-events-none"></div>
+    <div class="absolute right-36 -top-8 w-24 h-24 rounded-full bg-white/10 pointer-events-none"></div>
+  </div>
+
+  <!-- MAIN INTERACTIVE CONTAINER -->
+  <main class="max-w-6xl w-full mx-auto flex-1">
+
+    <!-- ================= STAGE 1: DISCOVERY LAB (SENTENCE TRAIN) ================= -->
+    <section id="stage-1" class="stage-section block">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 md:p-8 shadow-xl border-4 border-blue-200 relative">
+
+        <!-- Stage Title & Progress -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-2xl font-black text-blue-800 flex items-center gap-2">
+              🚂 Experiment Lab: The Sentence Train
+            </h2>
+            <p class="text-slate-500 text-sm font-semibold">Try dragging pronoun cards into the slots. Can any word stand anywhere? Test and discover!</p>
+          </div>
+          <div class="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-2xl border border-blue-200">
+            <span class="text-sm font-bold text-blue-700">Aha! Clues Found:</span>
+            <div class="flex gap-1.5" id="clue-tracker">
+              <span class="w-4 h-4 rounded-full bg-slate-300 clue-dot" id="clue-1"></span>
+              <span class="w-4 h-4 rounded-full bg-slate-300 clue-dot" id="clue-2"></span>
+              <span class="w-4 h-4 rounded-full bg-slate-300 clue-dot" id="clue-3"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sentence Challenge Selector -->
+        <div class="flex items-center justify-center gap-2 md:gap-4 mb-6 overflow-x-auto py-1">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Test Scenario:</span>
+          <button onclick="setTrainScenario(0)" id="scen-btn-0" class="scen-btn px-4 py-2 rounded-2xl font-bold text-sm bg-blue-600 text-white shadow-md">
+            Scenario 1: [ ? ] is nice.
+          </button>
+          <button onclick="setTrainScenario(1)" id="scen-btn-1" class="scen-btn px-4 py-2 rounded-2xl font-bold text-sm bg-slate-100 hover:bg-blue-100 text-slate-700">
+            Scenario 2: We like [ ? ].
+          </button>
+          <button onclick="setTrainScenario(2)" id="scen-btn-2" class="scen-btn px-4 py-2 rounded-2xl font-bold text-sm bg-slate-100 hover:bg-blue-100 text-slate-700">
+            Scenario 3: Miss Fan is nice to [ ? ].
+          </button>
+        </div>
+
+        <!-- TRAIN TRACK & TRAIN CARRIAGES -->
+        <div class="relative py-8 my-4 flex flex-col items-center justify-center overflow-x-auto">
+          <!-- The Sentence Train Layout -->
+          <div class="flex items-end justify-center min-w-[620px] md:min-w-[760px] gap-2 px-6 pb-2" id="train-container">
+
+            <!-- Slot 1: Blue Engine (Subject Slot - BEFORE VERB) -->
+            <div id="subject-carriage" class="relative flex-1 bg-gradient-to-b from-blue-500 to-blue-700 text-white rounded-3xl p-4 shadow-xl border-4 border-blue-300 flex flex-col items-center justify-between min-h-[190px] transition-all">
+              <!-- Chimney Smoke for engine -->
+              <div class="absolute -top-7 left-8 flex gap-1">
+                <span class="w-3 h-3 rounded-full bg-slate-300 opacity-60 animate-bounce"></span>
+                <span class="w-4 h-4 rounded-full bg-slate-300 opacity-80 animate-ping"></span>
+              </div>
+              <div class="w-full text-center">
+                <div class="text-xs font-black tracking-wider uppercase bg-blue-900/40 py-1 px-2.5 rounded-full inline-block border border-blue-300">
+                  💙 BLUE ENGINE: BEFORE VERB
+                </div>
+                <div class="text-xs font-semibold text-blue-100 mt-1">Sentence Leader (Subject)</div>
+              </div>
+
+              <!-- Drop Target Slot -->
+              <div id="drop-subject" ondragover="allowDrop(event)" ondrop="handleTrainDrop(event, 'subject')" class="w-full h-24 my-2 border-4 border-dashed border-white/70 rounded-2xl bg-white/20 flex flex-col items-center justify-center p-2 transition-all">
+                <span class="text-xs font-bold text-blue-100 placeholder-text pointer-events-none">Drop pronoun here</span>
+              </div>
+
+              <!-- Carriage Wheels -->
+              <div class="flex justify-between w-full px-4 -mb-8">
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-300 flex items-center justify-center shadow-md">
+                  <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-300 flex items-center justify-center shadow-md">
+                  <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hitch connector -->
+            <div class="w-6 h-3 bg-slate-700 rounded mb-6"></div>
+
+            <!-- Middle: Red Carriage (VERB / PREPOSITION) -->
+            <div id="verb-carriage" class="relative flex-1 bg-gradient-to-b from-red-500 to-rose-600 text-white rounded-3xl p-4 shadow-xl border-4 border-rose-300 flex flex-col items-center justify-between min-h-[190px]">
+              <div class="w-full text-center">
+                <div class="text-xs font-black tracking-wider uppercase bg-rose-900/40 py-1 px-2.5 rounded-full inline-block border border-rose-300">
+                  ❤️ RED MIDDLE: ACTION / LINK
+                </div>
+                <div class="text-xs font-semibold text-rose-100 mt-1">Verb / Preposition</div>
+              </div>
+
+              <!-- Fixed text inside verb carriage -->
+              <div class="w-full h-24 my-2 bg-white rounded-2xl flex items-center justify-center text-slate-800 shadow-inner px-3">
+                <div class="text-center">
+                  <span id="train-verb-text" class="text-xl md:text-2xl font-black text-rose-600">is nice</span>
+                  <div id="train-verb-tag" class="text-[10px] font-bold text-slate-400 tracking-wide uppercase">Verb</div>
+                </div>
+              </div>
+
+              <!-- Wheels -->
+              <div class="flex justify-between w-full px-4 -mb-8">
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-300 flex items-center justify-center shadow-md">
+                  <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-300 flex items-center justify-center shadow-md">
+                  <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hitch connector -->
+            <div class="w-6 h-3 bg-slate-700 rounded mb-6"></div>
+
+            <!-- Slot 2: Yellow Caboose (Object Slot - AFTER VERB / PREP) -->
+            <div id="object-carriage" class="relative flex-1 bg-gradient-to-b from-amber-400 to-yellow-500 text-amber-950 rounded-3xl p-4 shadow-xl border-4 border-yellow-200 flex flex-col items-center justify-between min-h-[190px] transition-all">
+              <div class="w-full text-center">
+                <div class="text-xs font-black tracking-wider uppercase bg-amber-800/20 py-1 px-2.5 rounded-full inline-block border border-yellow-300">
+                  💛 YELLOW CABOOSE: AFTER VERB
+                </div>
+                <div class="text-xs font-semibold text-amber-900 mt-1">Sentence Follower (Object)</div>
+              </div>
+
+              <!-- Drop Target Slot -->
+              <div id="drop-object" ondragover="allowDrop(event)" ondrop="handleTrainDrop(event, 'object')" class="w-full h-24 my-2 border-4 border-dashed border-amber-900/40 rounded-2xl bg-white/30 flex flex-col items-center justify-center p-2 transition-all">
+                <span class="text-xs font-bold text-amber-900 placeholder-text pointer-events-none">Drop pronoun here</span>
+              </div>
+
+              <!-- Wheels -->
+              <div class="flex justify-between w-full px-4 -mb-8">
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-300 flex items-center justify-center shadow-md">
+                  <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                </div>
+                <div class="w-9 h-9 rounded-full bg-slate-800 border-4 border-slate-300 flex items-center justify-center shadow-md">
+                  <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Railway Track -->
+          <div class="w-full max-w-4xl train-track mt-4 rounded"></div>
+        </div>
+
+        <!-- Full Sentence Readout bar with speaker -->
+        <div class="bg-blue-50/80 border-2 border-blue-200 rounded-2xl p-3 my-4 flex items-center justify-between gap-3 max-w-2xl mx-auto shadow-inner">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📢</span>
+            <span class="text-xs font-bold uppercase text-blue-700">Complete Sentence:</span>
+            <span id="full-sentence-display" class="font-bold text-slate-700 text-base md:text-lg italic">
+              [ ... ] is nice.
+            </span>
+          </div>
+          <button onclick="readFullSentence()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 shadow">
+            <span>🔊</span> Speak
+          </button>
+        </div>
+
+        <!-- Experiment Feedback Callout -->
+        <div id="train-feedback-box" class="hidden max-w-2xl mx-auto mb-6 p-4 rounded-2xl border-2 text-center transition-all animate-wiggle">
+          <div id="train-feedback-text" class="text-base font-extrabold"></div>
+        </div>
+
+        <!-- PRONOUN MAGNET CARDS POOL -->
+        <div class="mt-6 pt-6 border-t-2 border-slate-100">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-sm font-extrabold text-slate-700 flex items-center gap-1.5">
+              <span>🧲</span> Pronoun Magnet Cards (Drag or Tap to Test!):
+            </span>
+            <span class="text-xs text-slate-400 font-semibold">Tip: Try both Subject & Object forms</span>
+          </div>
+
+          <!-- Cards container -->
+          <div id="magnet-pool" class="flex flex-wrap items-center justify-center gap-3 p-4 bg-slate-50 rounded-2xl border-2 border-slate-200">
+            <!-- Dynamically populated or static draggable cards -->
+          </div>
+        </div>
+
+        <!-- Action / Reset Buttons -->
+        <div class="flex justify-center gap-4 mt-6">
+          <button onclick="resetTrain()" class="px-5 py-2.5 rounded-2xl font-bold text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center gap-2 shadow-sm">
+            <span>🔄</span> Clear Train Slots
+          </button>
+          <button onclick="checkAhaMomentManual()" class="px-6 py-2.5 rounded-2xl font-extrabold text-sm bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-amber-950 flex items-center gap-2 shadow-lg transition-transform active:scale-95">
+            <span>💡</span> Open Detective Rules ("Eureka!")
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= STAGE 2: PAIRING & MAGIC MIRROR ================= -->
+    <section id="stage-2" class="stage-section hidden">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 md:p-8 shadow-xl border-4 border-indigo-200">
+        
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-2xl font-black text-indigo-800 flex items-center gap-2">
+              🪞 Pronoun Magic Mirror (Pairing & Transformation)
+            </h2>
+            <p class="text-slate-500 text-sm font-semibold">
+              Subject Pronouns look into the Magic Mirror and transform into their Object Pronoun friends!
+            </p>
+          </div>
+          <button onclick="flipAllMirrors()" class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-2xl text-xs font-bold flex items-center gap-1.5">
+            <span>✨</span> Flip All Mirrors
+          </button>
+        </div>
+
+        <!-- Mascot Tip for Stage 2 -->
+        <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-4 mb-6 flex items-center gap-4">
+          <div class="text-4xl">🪄</div>
+          <div class="text-sm font-semibold text-indigo-900">
+            <span class="font-extrabold text-indigo-700">Ellie's Secret:</span> Click each Magic Mirror card to flip and discover its partner. Listen closely to the textbook examples from <span class="font-bold underline">Chapter 3 Our Teachers</span>!
+          </div>
+        </div>
+
+        <!-- 5 Mirror Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 my-6">
+
+          <!-- Pair 1: I -> me -->
+          <div class="mirror-card h-80" onclick="toggleMirror(this, 'I', 'me', 'I am Tom. Mum loves me.')">
+            <div class="mirror-inner relative w-full h-full cursor-pointer shadow-lg rounded-3xl border-4 border-blue-300">
+              <!-- FRONT: Subject (I) -->
+              <div class="mirror-front absolute inset-0 bg-gradient-to-b from-blue-50 to-blue-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center">
+                <div class="bg-blue-600 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Subject Leader</div>
+                <div class="text-6xl font-black text-blue-600 my-auto">I</div>
+                <div class="text-xs font-bold text-slate-500">Before Verb</div>
+                <div class="w-full bg-white/80 py-2 rounded-xl text-xs font-extrabold text-blue-700 flex items-center justify-center gap-1 shadow-sm">
+                  <span>🪄</span> Click to Transform!
+                </div>
+              </div>
+              <!-- BACK: Object (me) -->
+              <div class="mirror-back absolute inset-0 bg-gradient-to-b from-amber-50 to-yellow-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center border-4 border-yellow-300">
+                <div class="bg-amber-500 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Object Follower</div>
+                <div class="text-5xl font-black text-amber-600 my-auto">me</div>
+                <div class="p-2 bg-white/90 rounded-xl text-xs font-bold text-slate-700 shadow-inner">
+                  "I am Tom.<br>Mum loves <span class="text-amber-600 font-black underline">me</span>."
+                </div>
+                <button onclick="event.stopPropagation(); speakText('I am Tom. Mum loves me.')" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 py-1.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 shadow">
+                  <span>🔊</span> Listen Example
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pair 2: we -> us -->
+          <div class="mirror-card h-80" onclick="toggleMirror(this, 'we', 'us', 'We are in Class 2A. Mr Wu is nice to us.')">
+            <div class="mirror-inner relative w-full h-full cursor-pointer shadow-lg rounded-3xl border-4 border-blue-300">
+              <div class="mirror-front absolute inset-0 bg-gradient-to-b from-blue-50 to-blue-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center">
+                <div class="bg-blue-600 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Subject Leader</div>
+                <div class="text-5xl font-black text-blue-600 my-auto">we</div>
+                <div class="text-xs font-bold text-slate-500">Before Verb</div>
+                <div class="w-full bg-white/80 py-2 rounded-xl text-xs font-extrabold text-blue-700 flex items-center justify-center gap-1 shadow-sm">
+                  <span>🪄</span> Click to Transform!
+                </div>
+              </div>
+              <div class="mirror-back absolute inset-0 bg-gradient-to-b from-amber-50 to-yellow-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center border-4 border-yellow-300">
+                <div class="bg-amber-500 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Object Follower</div>
+                <div class="text-5xl font-black text-amber-600 my-auto">us</div>
+                <div class="p-2 bg-white/90 rounded-xl text-xs font-bold text-slate-700 shadow-inner">
+                  "We are in Class 2A.<br>Mr Wu is nice to <span class="text-amber-600 font-black underline">us</span>."
+                </div>
+                <button onclick="event.stopPropagation(); speakText('We are in Class 2A. Mr Wu is nice to us.')" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 py-1.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 shadow">
+                  <span>🔊</span> Listen Example
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pair 3: you -> you -->
+          <div class="mirror-card h-80" onclick="toggleMirror(this, 'you', 'you', 'You are polite. I like you.')">
+            <div class="mirror-inner relative w-full h-full cursor-pointer shadow-lg rounded-3xl border-4 border-purple-300">
+              <div class="mirror-front absolute inset-0 bg-gradient-to-b from-purple-50 to-purple-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center">
+                <div class="bg-purple-600 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Subject Leader</div>
+                <div class="text-5xl font-black text-purple-600 my-auto">you</div>
+                <div class="text-xs font-bold text-slate-500">Before Verb</div>
+                <div class="w-full bg-white/80 py-2 rounded-xl text-xs font-extrabold text-purple-700 flex items-center justify-center gap-1 shadow-sm">
+                  <span>🪄</span> Click to Transform!
+                </div>
+              </div>
+              <div class="mirror-back absolute inset-0 bg-gradient-to-b from-amber-50 to-yellow-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center border-4 border-yellow-300">
+                <div class="bg-amber-500 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Object Follower</div>
+                <div class="text-5xl font-black text-amber-600 my-auto">you</div>
+                <div class="p-2 bg-white/90 rounded-xl text-xs font-bold text-slate-700 shadow-inner">
+                  "You are polite.<br>I like <span class="text-amber-600 font-black underline">you</span>."
+                </div>
+                <button onclick="event.stopPropagation(); speakText('You are polite. I like you.')" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 py-1.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 shadow">
+                  <span>🔊</span> Listen Example
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pair 4: he -> him -->
+          <div class="mirror-card h-80" onclick="toggleMirror(this, 'he', 'him', 'He is Mr Wu. Do you like him?')">
+            <div class="mirror-inner relative w-full h-full cursor-pointer shadow-lg rounded-3xl border-4 border-blue-300">
+              <div class="mirror-front absolute inset-0 bg-gradient-to-b from-blue-50 to-blue-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center">
+                <div class="bg-blue-600 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Subject Leader</div>
+                <div class="text-5xl font-black text-blue-600 my-auto">he</div>
+                <div class="text-xs font-bold text-slate-500">For a boy/man</div>
+                <div class="w-full bg-white/80 py-2 rounded-xl text-xs font-extrabold text-blue-700 flex items-center justify-center gap-1 shadow-sm">
+                  <span>🪄</span> Click to Transform!
+                </div>
+              </div>
+              <div class="mirror-back absolute inset-0 bg-gradient-to-b from-amber-50 to-yellow-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center border-4 border-yellow-300">
+                <div class="bg-amber-500 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Object Follower</div>
+                <div class="text-5xl font-black text-amber-600 my-auto">him</div>
+                <div class="p-2 bg-white/90 rounded-xl text-xs font-bold text-slate-700 shadow-inner">
+                  "He is Mr Wu.<br>Do you like <span class="text-amber-600 font-black underline">him</span>?"
+                </div>
+                <button onclick="event.stopPropagation(); speakText('He is Mr Wu. Do you like him?')" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 py-1.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 shadow">
+                  <span>🔊</span> Listen Example
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pair 5: she -> her -->
+          <div class="mirror-card h-80" onclick="toggleMirror(this, 'she', 'her', 'She is Miss Fan. We like her.')">
+            <div class="mirror-inner relative w-full h-full cursor-pointer shadow-lg rounded-3xl border-4 border-blue-300">
+              <div class="mirror-front absolute inset-0 bg-gradient-to-b from-blue-50 to-blue-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center">
+                <div class="bg-blue-600 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Subject Leader</div>
+                <div class="text-5xl font-black text-blue-600 my-auto">she</div>
+                <div class="text-xs font-bold text-slate-500">For a girl/woman</div>
+                <div class="w-full bg-white/80 py-2 rounded-xl text-xs font-extrabold text-blue-700 flex items-center justify-center gap-1 shadow-sm">
+                  <span>🪄</span> Click to Transform!
+                </div>
+              </div>
+              <div class="mirror-back absolute inset-0 bg-gradient-to-b from-amber-50 to-yellow-100 rounded-[20px] p-4 flex flex-col items-center justify-between text-center border-4 border-yellow-300">
+                <div class="bg-amber-500 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">Object Follower</div>
+                <div class="text-5xl font-black text-amber-600 my-auto">her</div>
+                <div class="p-2 bg-white/90 rounded-xl text-xs font-bold text-slate-700 shadow-inner">
+                  "She is Miss Fan.<br>We like <span class="text-amber-600 font-black underline">her</span>."
+                </div>
+                <button onclick="event.stopPropagation(); speakText('She is Miss Fan. We like her.')" class="w-full bg-amber-400 hover:bg-amber-300 text-amber-950 py-1.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1 shadow">
+                  <span>🔊</span> Listen Example
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Summary Table for Reference -->
+        <div class="mt-8 bg-slate-50 border-2 border-slate-200 rounded-3xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-extrabold text-slate-800 text-lg flex items-center gap-2">
+              <span>📋</span> Detective Field Notes Summary
+            </h3>
+            <span class="text-xs font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full">Mastery Chart</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-200 text-slate-700 font-black">
+                  <th class="p-3 rounded-l-xl">Subject Pronoun (Leader)</th>
+                  <th class="p-3">Where does it stand?</th>
+                  <th class="p-3">Object Pronoun (Follower)</th>
+                  <th class="p-3 rounded-r-xl">Where does it stand?</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 font-bold text-slate-700">
+                <tr>
+                  <td class="p-3 text-blue-600">I / we / you / he / she</td>
+                  <td class="p-3 text-xs text-blue-800 bg-blue-50/50">BEFORE Verb (e.g., <span class="underline">He</span> is nice.)</td>
+                  <td class="p-3 text-amber-600">me / us / you / him / her</td>
+                  <td class="p-3 text-xs text-amber-800 bg-amber-50/50">AFTER Verb or Preposition (e.g., like <span class="underline">him</span> / to <span class="underline">us</span>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= STAGE 3: MINI-GAMES ================= -->
+    <section id="stage-3" class="stage-section hidden">
+      <div class="bg-white/90 backdrop-blur-md rounded-3xl p-5 md:p-8 shadow-xl border-4 border-emerald-200">
+
+        <!-- Mini-Game Level Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-2xl font-black text-emerald-800 flex items-center gap-2">
+              🎮 Detective Challenge Missions
+            </h2>
+            <p class="text-slate-500 text-sm font-semibold">Test your skills in 3 fun detective challenges!</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="switchGameLevel(1)" id="game-tab-1" class="game-tab px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm bg-emerald-600 text-white shadow">
+              Level 1: Sorting
+            </button>
+            <button onclick="switchGameLevel(2)" id="game-tab-2" class="game-tab px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm bg-slate-100 text-slate-700 hover:bg-emerald-100">
+              Level 2: Pronoun Swap
+            </button>
+            <button onclick="switchGameLevel(3)" id="game-tab-3" class="game-tab px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm bg-slate-100 text-slate-700 hover:bg-emerald-100">
+              Level 3: Sentence Doctor
+            </button>
+          </div>
+        </div>
+
+        <!-- ============ LEVEL 1: POSITION SORTING ============ -->
+        <div id="game-level-1" class="game-level-pane block">
+          <div class="text-center max-w-xl mx-auto mb-6">
+            <span class="bg-emerald-100 text-emerald-800 font-extrabold text-xs px-3 py-1 rounded-full uppercase">Mission 1</span>
+            <h3 class="text-xl font-black text-slate-800 mt-1">Position Sorting Chests</h3>
+            <p class="text-slate-500 text-xs font-semibold">Drag the pronoun into the correct chest: Does it go <b>BEFORE the Verb</b> or <b>AFTER the Verb / Preposition</b>?</p>
+          </div>
+
+          <!-- Current Card to Sort -->
+          <div class="flex flex-col items-center justify-center my-6">
+            <div class="text-xs font-bold text-slate-400 mb-2">TARGET CARD:</div>
+            <div id="sorting-card-slot" class="w-40 h-24 flex items-center justify-center">
+              <!-- Draggable card will appear here -->
+            </div>
+            <div class="mt-2 text-xs font-bold text-slate-400">Score: <span id="sort-score" class="text-emerald-600 font-black">0</span> / 6</div>
+          </div>
+
+          <!-- Two Treasure Chests Drop Targets -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto my-4">
+            <!-- Chest 1: Before Verb -->
+            <div id="chest-before" ondragover="allowDrop(event)" ondrop="handleChestDrop(event, 'before')" onclick="handleChestClick('before')" class="p-6 rounded-3xl bg-blue-50 border-4 border-dashed border-blue-400 hover:bg-blue-100 transition-all flex flex-col items-center text-center cursor-pointer shadow-md">
+              <div class="text-5xl mb-2">📦</div>
+              <div class="text-lg font-black text-blue-700">Before Verb</div>
+              <div class="text-xs font-bold text-blue-900 bg-blue-200/80 px-2.5 py-0.5 rounded-full mt-1">Sentence Leader (Subject)</div>
+              <div class="text-xs text-slate-500 mt-2 font-semibold">Drop or Tap here for: I, we, you, he, she</div>
+            </div>
+
+            <!-- Chest 2: After Verb / Preposition -->
+            <div id="chest-after" ondragover="allowDrop(event)" ondrop="handleChestDrop(event, 'after')" onclick="handleChestClick('after')" class="p-6 rounded-3xl bg-amber-50 border-4 border-dashed border-amber-400 hover:bg-amber-100 transition-all flex flex-col items-center text-center cursor-pointer shadow-md">
+              <div class="text-5xl mb-2">🎁</div>
+              <div class="text-lg font-black text-amber-700">After Verb / Preposition</div>
+              <div class="text-xs font-bold text-amber-900 bg-amber-200/80 px-2.5 py-0.5 rounded-full mt-1">Sentence Follower (Object)</div>
+              <div class="text-xs text-slate-500 mt-2 font-semibold">Drop or Tap here for: me, us, you, him, her</div>
+            </div>
+          </div>
+
+          <div class="flex justify-center mt-4">
+            <button onclick="initSortingGame()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl">
+              Restart Sorting Mission
+            </button>
+          </div>
+        </div>
+
+        <!-- ============ LEVEL 2: PRONOUN SWAP ============ -->
+        <div id="game-level-2" class="game-level-pane hidden">
+          <div class="text-center max-w-xl mx-auto mb-6">
+            <span class="bg-indigo-100 text-indigo-800 font-extrabold text-xs px-3 py-1 rounded-full uppercase">Mission 2</span>
+            <h3 class="text-xl font-black text-slate-800 mt-1">Teacher Pronoun Swap</h3>
+            <p class="text-slate-500 text-xs font-semibold">Replace the repeated teacher's name with the correct pronoun!</p>
+          </div>
+
+          <div class="max-w-2xl mx-auto bg-slate-50 border-2 border-indigo-200 rounded-3xl p-6 shadow-sm">
+            <!-- Question prompt -->
+            <div class="text-center mb-6">
+              <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2" id="swap-counter">Question 1 of 4</div>
+              <div id="swap-context" class="text-lg md:text-xl font-bold text-slate-800 leading-relaxed bg-white p-4 rounded-2xl border border-slate-200 shadow-inner">
+                "Who is your Maths teacher? My Maths teacher is Mr Wu. Do you like <span class="bg-yellow-200 px-3 py-1 rounded-xl text-amber-900 border-2 border-dashed border-amber-400 font-black cursor-pointer inline-block animate-pulse">( Mr Wu )</span>?"
+              </div>
+              <button onclick="speakCurrentSwapQuestion()" class="mt-3 text-xs bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold px-3 py-1.5 rounded-xl inline-flex items-center gap-1">
+                <span>🔊</span> Listen sentence
+              </button>
+            </div>
+
+            <div class="text-center mb-3">
+              <div class="text-xs font-bold text-slate-400">Which pronoun should replace the name after the verb?</div>
+            </div>
+
+            <!-- 3 Multiple choice options -->
+            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto" id="swap-options-container">
+              <!-- Dynamically populated -->
+            </div>
+
+            <!-- Feedback -->
+            <div id="swap-feedback" class="mt-4 text-center font-bold text-sm hidden"></div>
+          </div>
+        </div>
+
+        <!-- ============ LEVEL 3: SENTENCE DOCTOR ============ -->
+        <div id="game-level-3" class="game-level-pane hidden">
+          <div class="text-center max-w-xl mx-auto mb-6">
+            <span class="bg-rose-100 text-rose-800 font-extrabold text-xs px-3 py-1 rounded-full uppercase">Mission 3</span>
+            <h3 class="text-xl font-black text-slate-800 mt-1">The Sentence Doctor 🩺</h3>
+            <p class="text-slate-500 text-xs font-semibold">Elephant Ellie made a silly grammar mistake! Tap the sick pronoun and cure it!</p>
+          </div>
+
+          <div class="max-w-2xl mx-auto bg-rose-50/60 border-2 border-rose-200 rounded-3xl p-6 text-center shadow-sm">
+            <div class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-2" id="doctor-counter">Patient 1 of 3</div>
+            
+            <div class="my-4 bg-white p-5 rounded-2xl border border-rose-100 shadow-inner">
+              <div class="text-xs font-semibold text-slate-400 mb-1">Click the WRONG word to cure it:</div>
+              <div id="doctor-sentence-container" class="text-xl md:text-2xl font-bold flex flex-wrap items-center justify-center gap-2">
+                <!-- Word tokens rendered here -->
+              </div>
+            </div>
+
+            <button onclick="speakDoctorSentence()" class="mb-4 text-xs bg-rose-100 hover:bg-rose-200 text-rose-800 font-bold px-3 py-1.5 rounded-xl inline-flex items-center gap-1">
+              <span>🔊</span> Read silly sentence
+            </button>
+
+            <!-- Choice popup when sick word is clicked -->
+            <div id="doctor-cure-choices" class="hidden p-4 bg-white rounded-2xl border-2 border-emerald-300 max-w-md mx-auto animate-float">
+              <div class="text-xs font-bold text-emerald-700 mb-2">Pick the healthy pronoun to heal the sentence:</div>
+              <div id="cure-buttons" class="flex justify-center gap-3">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <div id="doctor-feedback" class="mt-3 text-sm font-bold text-emerald-600 hidden"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= EUREKA! AHA-MOMENT DETECTIVE BADGE MODAL ================= -->
+  <div id="eureka-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border-4 border-yellow-400 relative text-center animate-wiggle">
+      
+      <!-- Close button -->
+      <button onclick="closeEurekaModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-black text-lg flex items-center justify-center">
+        ✕
+      </button>
+
+      <!-- Badge Icon -->
+      <div class="w-20 h-20 mx-auto bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-3xl flex items-center justify-center text-4xl shadow-lg border-2 border-white mb-3">
+        🕵️‍♂️
+      </div>
+
+      <div class="bg-amber-100 text-amber-900 text-xs font-black uppercase px-3 py-1 rounded-full inline-block mb-1">
+        Discovery Solved!
+      </div>
+      <h3 class="text-2xl font-black text-slate-800 mb-2">
+        Aha! The Detective Rules
+      </h3>
+      <p class="text-slate-600 text-sm font-semibold mb-5">
+        You tested the Sentence Train and found the golden secret! Check off your findings:
+      </p>
+
+      <!-- Checkbox Rule 1 -->
+      <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 text-left mb-3 flex items-start gap-3">
+        <input type="checkbox" id="rule1-check" checked class="mt-1 w-5 h-5 accent-blue-600 rounded cursor-pointer">
+        <label for="rule1-check" class="text-sm font-bold text-blue-900 cursor-pointer">
+          <span class="text-blue-600 font-black">Rule 1 (Sentence Leader):</span><br>
+          <span class="text-xs font-semibold text-slate-700"><b>I, we, you, he, she</b> always stand <u>BEFORE</u> the verb as the Subject!</span>
+        </label>
+      </div>
+
+      <!-- Checkbox Rule 2 -->
+      <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 text-left mb-5 flex items-start gap-3">
+        <input type="checkbox" id="rule2-check" checked class="mt-1 w-5 h-5 accent-amber-600 rounded cursor-pointer">
+        <label for="rule2-check" class="text-sm font-bold text-amber-950 cursor-pointer">
+          <span class="text-amber-700 font-black">Rule 2 (Sentence Follower):</span><br>
+          <span class="text-xs font-semibold text-slate-700"><b>me, us, you, him, her</b> always stand <u>AFTER</u> a verb or preposition (like, to) as the Object!</span>
+        </label>
+      </div>
+
+      <!-- Action -->
+      <div class="flex gap-3">
+        <button onclick="speakRules()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-2xl flex items-center justify-center gap-1.5">
+          <span>🔊</span> Read Aloud
+        </button>
+        <button onclick="claimBadge()" class="flex-1 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-amber-950 font-black text-sm rounded-2xl shadow-lg flex items-center justify-center gap-1.5">
+          <span>🎖️</span> Claim Badge & Continue!
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="max-w-6xl w-full mx-auto mt-6 bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-slate-200 text-center text-xs font-semibold text-slate-500 flex flex-wrap items-center justify-between gap-2">
+    <div>
+      📘 Primary 2 ESL • Longman English World 2A Chapter 3 <i>Our Teachers</i>
+    </div>
+    <div class="flex items-center gap-2">
+      <span class="text-blue-600 font-bold">Pronoun Position Detectives</span>
+      <span>•</span>
+      <span class="text-amber-600">Discovery & Inductive Learning</span>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    /* ========================================================
+       1. WEB AUDIO API SYNTHESIZER (NO EXTERNAL AUDIO FILES)
+       ======================================================== */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('sound-icon');
+      const btn = document.getElementById('sound-btn');
+      if (soundEnabled) {
+        icon.textContent = '🔊';
+        btn.classList.replace('bg-slate-200', 'bg-amber-100');
+        playSynthSound('pop');
+      } else {
+        icon.textContent = '🔇';
+        btn.classList.replace('bg-amber-100', 'bg-slate-200');
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      }
+    }
+
+    function playSynthSound(type) {
+      if (!soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'pop') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.09);
+      } else if (type === 'ding') {
+        // High cheery chime
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, now); // A5
+        osc.frequency.setValueAtTime(1320, now + 0.1); // E6
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.46);
+      } else if (type === 'boing') {
+        // Silly bounce / oops sound
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.28);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.28);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.29);
+      } else if (type === 'fanfare') {
+        // Little 3-tone victory
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.1);
+          gain.gain.setValueAtTime(0.2, now + idx * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.1);
+          osc.stop(now + idx * 0.1 + 0.32);
+        });
+      } else if (type === 'sparkle') {
+        for (let i = 0; i < 4; i++) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1000 + i * 350, now + i * 0.05);
+          gain.gain.setValueAtTime(0.15, now + i * 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.18);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now + i * 0.05);
+          osc.stop(now + i * 0.05 + 0.2);
+        }
+      }
+    }
+
+    /* ========================================================
+       2. WEB SPEECH SYNTHESIS (TTS)
+       ======================================================== */
+    function speakText(text) {
+      if (!soundEnabled) return;
+      if (!('speechSynthesis' in window)) return;
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.88; // gentle, child-friendly pace
+      utterance.pitch = 1.15; // slightly friendly & clear
+
+      // Pick an English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const engVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Child') || v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+      if (engVoice) utterance.voice = engVoice;
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakElephant(text) {
+      const speechElem = document.getElementById('mascot-speech');
+      speechElem.textContent = `"${text}"`;
+      speakText(text);
+    }
+
+    function speakElephantCurrent() {
+      const speechElem = document.getElementById('mascot-speech');
+      const clean = speechElem.textContent.replace(/"/g, '');
+      speakText(clean);
+    }
+
+    /* ========================================================
+       3. GLOBAL APP STATE & REWARDS
+       ======================================================== */
+    let totalStars = 0;
+    let currentStage = 1;
+
+    function addStars(num) {
+      totalStars += num;
+      document.getElementById('star-count').textContent = totalStars;
+      playSynthSound('ding');
+      try {
+        confetti({
+          particleCount: 25 * num,
+          spread: 60,
+          origin: { y: 0.7 }
+        });
+      } catch (e) {}
+    }
+
+    function switchStage(stageNum) {
+      playSynthSound('pop');
+      currentStage = stageNum;
+
+      // Update nav buttons
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+        b.classList.add('text-slate-600');
+      });
+      const activeBtn = document.getElementById(`nav-stage${stageNum}`);
+      if (activeBtn) {
+        activeBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+        activeBtn.classList.remove('text-slate-600');
+      }
+
+      // Hide all stages, show targeted
+      document.querySelectorAll('.stage-section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(`stage-${stageNum}`).classList.remove('hidden');
+
+      if (stageNum === 1) {
+        speakElephant("Welcome to the Sentence Train! Drag pronouns into the blue engine or yellow caboose!");
+      } else if (stageNum === 2) {
+        speakElephant("Magic Mirror time! Tap the cards to see how subject pronouns change into object pronouns!");
+      } else if (stageNum === 3) {
+        speakElephant("Challenge mini-games are open! Show your pronoun detective powers!");
+      }
+    }
+
+    /* ========================================================
+       4. STAGE 1: SENTENCE TRAIN DISCOVERY LOGIC
+       ======================================================== */
+    const trainScenarios = [
+      {
+        id: 0,
+        activeSlot: 'subject', // which slot needs filling
+        beforeText: '',
+        verbText: 'is nice.',
+        verbTag: 'Verb Phrase',
+        fixedObject: null, // No fixed follower card
+        expectedType: 'subject', // requires subject pronoun
+        correctPronouns: ['He', 'She', 'I', 'we', 'you'],
+        ruleHint: "Rule 1: 'He' and 'She' stand before the verb!"
+      },
+      {
+        id: 1,
+        activeSlot: 'object',
+        beforeText: 'We',
+        verbText: 'like',
+        verbTag: 'Action Verb',
+        fixedSubject: 'We',
+        expectedType: 'object',
+        correctPronouns: ['him', 'her', 'you', 'me', 'us'],
+        ruleHint: "Rule 2: 'him' and 'her' stand after the verb!"
+      },
+      {
+        id: 2,
+        activeSlot: 'object',
+        beforeText: 'Miss Fan',
+        verbText: 'is nice to',
+        verbTag: 'Verb + Preposition',
+        fixedSubject: 'Miss Fan',
+        expectedType: 'object',
+        correctPronouns: ['us', 'me', 'him', 'her', 'you'],
+        ruleHint: "Rule 2: 'us' and 'me' follow the preposition 'to'!"
+      }
+    ];
+
+    let currentTrainScenarioIdx = 0;
+    let filledSlots = { subject: null, object: null };
+    let discoveredClues = new Set();
+
+    const pronounCardsData = [
+      { word: 'He', type: 'subject', label: 'Subject' },
+      { word: 'She', type: 'subject', label: 'Subject' },
+      { word: 'I', type: 'subject', label: 'Subject' },
+      { word: 'we', type: 'subject', label: 'Subject' },
+      { word: 'him', type: 'object', label: 'Object' },
+      { word: 'her', type: 'object', label: 'Object' },
+      { word: 'me', type: 'object', label: 'Object' },
+      { word: 'us', type: 'object', label: 'Object' },
+      { word: 'you', type: 'both', label: 'Flexible' }
+    ];
+
+    function renderMagnetCards() {
+      const container = document.getElementById('magnet-pool');
+      container.innerHTML = '';
+
+      pronounCardsData.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.id = `magnet-${idx}`;
+        card.className = `draggable-card px-4 py-2.5 rounded-2xl font-black text-base md:text-lg shadow-md border-2 cursor-grab flex items-center gap-1.5 transition-transform ${
+          item.type === 'subject' 
+            ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 border-blue-300' 
+            : item.type === 'object' 
+            ? 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300' 
+            : 'bg-purple-100 hover:bg-purple-200 text-purple-900 border-purple-300'
+        }`;
+        card.draggable = true;
+        card.setAttribute('data-word', item.word);
+        card.setAttribute('data-type', item.type);
+
+        card.innerHTML = `
+          <span>${item.word}</span>
+          <span class="text-[10px] font-bold opacity-60 uppercase bg-white/70 px-1.5 py-0.5 rounded-full">${item.word === 'you' ? 'Subj/Obj' : item.type}</span>
+        `;
+
+        // Desktop Drag events
+        card.addEventListener('dragstart', handleDragStart);
+        // Mobile tap quick test
+        card.addEventListener('click', () => {
+          handleMagnetTap(item);
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    let draggedItemData = null;
+
+    function handleDragStart(e) {
+      playSynthSound('pop');
+      const target = e.currentTarget;
+      draggedItemData = {
+        word: target.getAttribute('data-word'),
+        type: target.getAttribute('data-type')
+      };
+      e.dataTransfer.setData('text/plain', JSON.stringify(draggedItemData));
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function setTrainScenario(scenIdx) {
+      currentTrainScenarioIdx = scenIdx;
+      playSynthSound('pop');
+
+      // Update scenario buttons
+      for (let i = 0; i < 3; i++) {
+        const btn = document.getElementById(`scen-btn-${i}`);
+        if (i === scenIdx) {
+          btn.className = "scen-btn px-4 py-2 rounded-2xl font-bold text-sm bg-blue-600 text-white shadow-md";
+        } else {
+          btn.className = "scen-btn px-4 py-2 rounded-2xl font-bold text-sm bg-slate-100 hover:bg-blue-100 text-slate-700";
+        }
+      }
+
+      resetTrain();
+    }
+
+    function resetTrain() {
+      const scenario = trainScenarios[currentTrainScenarioIdx];
+      filledSlots = { subject: null, object: null };
+
+      // Update Verb carriage
+      document.getElementById('train-verb-text').textContent = scenario.verbText;
+      document.getElementById('train-verb-tag').textContent = scenario.verbTag;
+
+      // Reset slot visuals
+      const subjDrop = document.getElementById('drop-subject');
+      const objDrop = document.getElementById('drop-object');
+
+      if (scenario.fixedSubject) {
+        subjDrop.innerHTML = `<span class="text-xl font-black text-white bg-blue-800/80 px-4 py-2 rounded-xl border border-blue-300">${scenario.fixedSubject}</span>`;
+        subjDrop.classList.remove('border-dashed', 'border-white/70');
+        subjDrop.classList.add('border-solid', 'border-blue-300');
+        filledSlots.subject = scenario.fixedSubject;
+      } else {
+        subjDrop.innerHTML = `<span class="text-xs font-bold text-blue-100 placeholder-text pointer-events-none">Drop pronoun here</span>`;
+        subjDrop.className = "w-full h-24 my-2 border-4 border-dashed border-white/70 rounded-2xl bg-white/20 flex flex-col items-center justify-center p-2 transition-all";
+      }
+
+      if (scenario.fixedObject) {
+        objDrop.innerHTML = `<span class="text-xl font-black text-amber-950 bg-yellow-200 px-4 py-2 rounded-xl border border-amber-300">${scenario.fixedObject}</span>`;
+        objDrop.classList.remove('border-dashed', 'border-amber-900/40');
+        objDrop.classList.add('border-solid', 'border-amber-300');
+        filledSlots.object = scenario.fixedObject;
+      } else {
+        objDrop.innerHTML = `<span class="text-xs font-bold text-amber-900 placeholder-text pointer-events-none">Drop pronoun here</span>`;
+        objDrop.className = "w-full h-24 my-2 border-4 border-dashed border-amber-900/40 rounded-2xl bg-white/30 flex flex-col items-center justify-center p-2 transition-all";
+      }
+
+      hideFeedback();
+      updateSentenceDisplay();
+    }
+
+    function handleMagnetTap(item) {
+      // Tap helper: automatically tries to drop into the active target slot of current scenario
+      const scenario = trainScenarios[currentTrainScenarioIdx];
+      const targetSlot = scenario.activeSlot;
+      processDrop(item.word, item.type, targetSlot);
+    }
+
+    function handleTrainDrop(e, slotName) {
+      e.preventDefault();
+      let data = draggedItemData;
+      try {
+        const raw = e.dataTransfer.getData('text/plain');
+        if (raw) data = JSON.parse(raw);
+      } catch (err) {}
+
+      if (!data) return;
+      processDrop(data.word, data.type, slotName);
+    }
+
+    function processDrop(word, type, slotName) {
+      const scenario = trainScenarios[currentTrainScenarioIdx];
+
+      // Check slot rules
+      const isSubjectSlot = (slotName === 'subject');
+      const dropZone = document.getElementById(isSubjectSlot ? 'drop-subject' : 'drop-object');
+
+      // Immediate visual & audio experiment reaction:
+      // Condition A: Wrong placement in Subject slot (e.g. "him is nice")
+      if (isSubjectSlot && (type === 'object')) {
+        playSynthSound('boing');
+        showFeedback(false, `Oops! "${word}" is an Object pronoun. It cannot stand in front of the verb!`);
+        shakeElement(dropZone);
+        speakElephant(`Oops! "${word}" cannot stand in front of the verb!`);
+        return;
+      }
+
+      // Condition B: Wrong placement in Object slot (e.g. "We like he")
+      if (!isSubjectSlot && (type === 'subject')) {
+        playSynthSound('boing');
+        showFeedback(false, `Oops! "${word}" is a Subject pronoun. It cannot stand after the verb or preposition!`);
+        shakeElement(dropZone);
+        speakElephant(`Oops! "${word}" cannot stand after the verb! We need an object pronoun!`);
+        return;
+      }
+
+      // Condition C: Correct Placement!
+      playSynthSound('ding');
+      filledSlots[slotName] = word;
+
+      // Lock in card display
+      dropZone.innerHTML = `
+        <div class="px-4 py-2 rounded-xl text-xl font-black ${isSubjectSlot ? 'bg-white text-blue-700 shadow-md border-2 border-blue-400' : 'bg-amber-400 text-amber-950 shadow-md border-2 border-amber-500'} animate-bounce">
+          ${word}
+        </div>
+      `;
+      dropZone.classList.add('animate-pulseGlow');
+
+      updateSentenceDisplay();
+
+      let successMsg = "";
+      if (isSubjectSlot) {
+        successMsg = `Bingo! "${word}" stands BEFORE the verb "${scenario.verbText}" as the sentence leader!`;
+        speakElephant(`Bingo! "${word}" leads before the verb!`);
+      } else {
+        successMsg = `Click! Yellow caboose locked! "${word}" stands AFTER the verb or preposition "${scenario.verbText}"!`;
+        speakElephant(`Hooray! "${word}" sits happily after the verb!`);
+      }
+
+      showFeedback(true, successMsg);
+      addStars(1);
+
+      // Track clue
+      discoveredClues.add(currentTrainScenarioIdx);
+      updateClueDots();
+
+      // Trigger "Eureka!" modal after 3 clues discovered
+      if (discoveredClues.size >= 3) {
+        setTimeout(() => {
+          openEurekaModal();
+        }, 1200);
+      }
+    }
+
+    function shakeElement(el) {
+      el.classList.add('animate-wiggle', 'border-red-500', 'bg-red-200/50');
+      setTimeout(() => {
+        el.classList.remove('animate-wiggle', 'border-red-500', 'bg-red-200/50');
+      }, 500);
+    }
+
+    function showFeedback(isSuccess, message) {
+      const box = document.getElementById('train-feedback-box');
+      const text = document.getElementById('train-feedback-text');
+      box.classList.remove('hidden', 'bg-green-100', 'border-green-400', 'text-green-800', 'bg-rose-100', 'border-rose-400', 'text-rose-800');
+
+      if (isSuccess) {
+        box.classList.add('bg-green-100', 'border-green-400', 'text-green-800');
+        text.innerHTML = `🎉 ${message}`;
+      } else {
+        box.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-800');
+        text.innerHTML = `⚠️ ${message}`;
+      }
+      box.classList.remove('hidden');
+    }
+
+    function hideFeedback() {
+      document.getElementById('train-feedback-box').classList.add('hidden');
+    }
+
+    function updateSentenceDisplay() {
+      const scenario = trainScenarios[currentTrainScenarioIdx];
+      const subj = filledSlots.subject || '[ ? ]';
+      const obj = filledSlots.object || (scenario.activeSlot === 'object' ? '[ ? ]' : '');
+      const fullText = `${subj} ${scenario.verbText} ${obj}`.trim();
+      document.getElementById('full-sentence-display').textContent = fullText;
+    }
+
+    function readFullSentence() {
+      const text = document.getElementById('full-sentence-display').textContent;
+      speakText(text);
+    }
+
+    function updateClueDots() {
+      for (let i = 0; i < 3; i++) {
+        const dot = document.getElementById(`clue-${i + 1}`);
+        if (discoveredClues.has(i)) {
+          dot.className = "w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-emerald-300 animate-pulse";
+        }
+      }
+    }
+
+    /* ========================================================
+       5. EUREKA! MODAL (INDUCTIVE SUMMARY)
+       ======================================================== */
+    function checkAhaMomentManual() {
+      openEurekaModal();
+    }
+
+    function openEurekaModal() {
+      playSynthSound('fanfare');
+      document.getElementById('eureka-modal').classList.remove('hidden');
+      speakElephant("Eureka! Look at the rules you discovered by testing the train!");
+    }
+
+    function closeEurekaModal() {
+      document.getElementById('eureka-modal').classList.add('hidden');
+    }
+
+    function claimBadge() {
+      closeEurekaModal();
+      addStars(3);
+      speakElephant("Detective badge unlocked! Next, explore the Magic Mirror in Stage 2!");
+      switchStage(2);
+    }
+
+    function speakRules() {
+      const text = "Rule 1: I, we, you, he, she always stand before the verb as the subject leader. Rule 2: me, us, you, him, her always follow after a verb or preposition!";
+      speakText(text);
+    }
+
+    /* ========================================================
+       6. STAGE 2: MAGIC MIRROR
+       ======================================================== */
+    function toggleMirror(cardElem, subj, obj, example) {
+      playSynthSound('sparkle');
+      const inner = cardElem.querySelector('.mirror-inner');
+      inner.classList.toggle('flipped');
+
+      const isFlipped = inner.classList.contains('flipped');
+      if (isFlipped) {
+        speakText(`${subj} becomes ${obj}! ${example}`);
+      } else {
+        speakText(subj);
+      }
+    }
+
+    function flipAllMirrors() {
+      playSynthSound('sparkle');
+      const inners = document.querySelectorAll('.mirror-inner');
+      inners.forEach(i => i.classList.toggle('flipped'));
+    }
+
+    /* ========================================================
+       7. STAGE 3: MINI GAMES
+       ======================================================== */
+    function switchGameLevel(lvl) {
+      playSynthSound('pop');
+      document.querySelectorAll('.game-tab').forEach(t => {
+        t.className = "game-tab px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm bg-slate-100 text-slate-700 hover:bg-emerald-100";
+      });
+      document.getElementById(`game-tab-${lvl}`).className = "game-tab px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm bg-emerald-600 text-white shadow";
+
+      document.querySelectorAll('.game-level-pane').forEach(p => p.classList.add('hidden'));
+      document.getElementById(`game-level-${lvl}`).classList.remove('hidden');
+
+      if (lvl === 1) initSortingGame();
+      if (lvl === 2) initSwapGame();
+      if (lvl === 3) initDoctorGame();
+    }
+
+    /* --- Level 1: Position Sorting --- */
+    const sortingCardsList = [
+      { word: 'He', position: 'before' },
+      { word: 'him', position: 'after' },
+      { word: 'She', position: 'before' },
+      { word: 'her', position: 'after' },
+      { word: 'we', position: 'before' },
+      { word: 'us', position: 'after' }
+    ];
+    let sortingCurrentIndex = 0;
+    let sortingScore = 0;
+
+    function initSortingGame() {
+      sortingCurrentIndex = 0;
+      sortingScore = 0;
+      document.getElementById('sort-score').textContent = '0';
+      displayNextSortingCard();
+    }
+
+    function displayNextSortingCard() {
+      const slot = document.getElementById('sorting-card-slot');
+      if (sortingCurrentIndex >= sortingCardsList.length) {
+        slot.innerHTML = `
+          <div class="p-3 bg-emerald-100 border-2 border-emerald-400 rounded-2xl text-emerald-800 text-center font-extrabold animate-bounce">
+            🎉 Level 1 Cleared!
+          </div>
+        `;
+        playSynthSound('fanfare');
+        speakElephant("Terrific sorting! Move on to Level 2: Pronoun Swap!");
+        return;
+      }
+
+      const item = sortingCardsList[sortingCurrentIndex];
+      slot.innerHTML = `
+        <div id="active-sort-card" draggable="true" ondragstart="handleSortCardDrag(event)" class="px-6 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-black text-2xl shadow-xl cursor-grab border-2 border-indigo-300 animate-pulseGlow">
+          ${item.word}
+        </div>
+      `;
+    }
+
+    function handleSortCardDrag(e) {
+      playSynthSound('pop');
+      const item = sortingCardsList[sortingCurrentIndex];
+      e.dataTransfer.setData('text/plain', item.position);
+    }
+
+    function handleChestDrop(e, chestType) {
+      e.preventDefault();
+      verifyChestAnswer(chestType);
+    }
+
+    function handleChestClick(chestType) {
+      verifyChestAnswer(chestType);
+    }
+
+    function verifyChestAnswer(chosenType) {
+      if (sortingCurrentIndex >= sortingCardsList.length) return;
+      const current = sortingCardsList[sortingCurrentIndex];
+
+      if (current.position === chosenType) {
+        playSynthSound('ding');
+        sortingScore++;
+        document.getElementById('sort-score').textContent = sortingScore;
+        addStars(1);
+        sortingCurrentIndex++;
+        displayNextSortingCard();
+      } else {
+        playSynthSound('boing');
+        const chest = document.getElementById(chosenType === 'before' ? 'chest-before' : 'chest-after');
+        shakeElement(chest);
+        speakElephant(`Oops! Remember: ${current.word} goes ${current.position === 'before' ? 'BEFORE' : 'AFTER'} the verb!`);
+      }
+    }
+
+    /* --- Level 2: Pronoun Swap --- */
+    const swapQuestions = [
+      {
+        context: '"Who is your Maths teacher? My Maths teacher is Mr Wu. Do you like ( Mr Wu )?"',
+        targetWord: 'Mr Wu',
+        correct: 'him',
+        options: ['he', 'him', 'his'],
+        explanation: 'After the verb "like", we use the object pronoun "him" for Mr Wu!'
+      },
+      {
+        context: '"Who is your English teacher? My English teacher is Miss Fan. We like ( Miss Fan )."',
+        targetWord: 'Miss Fan',
+        correct: 'her',
+        options: ['she', 'her', 'hers'],
+        explanation: 'After the verb "like", we use the object pronoun "her" for Miss Fan!'
+      },
+      {
+        context: '"We are in Class 2A. Mr Tong is very kind to ( Class 2A and me )."',
+        targetWord: 'Class 2A and me',
+        correct: 'us',
+        options: ['we', 'us', 'our'],
+        explanation: 'After the preposition "to", we use "us"!'
+      },
+      {
+        context: '"Do you know my brother Ken? I often play with ( Ken ) at recess."',
+        targetWord: 'Ken',
+        correct: 'him',
+        options: ['he', 'him', 'his'],
+        explanation: 'After the preposition "with", we use "him"!'
+      }
+    ];
+
+    let swapCurrentIdx = 0;
+
+    function initSwapGame() {
+      swapCurrentIdx = 0;
+      loadSwapQuestion();
+    }
+
+    function loadSwapQuestion() {
+      if (swapCurrentIdx >= swapQuestions.length) {
+        document.getElementById('swap-context').innerHTML = `🎉 Mission 2 Complete! You are a master at replacing names with object pronouns!`;
+        document.getElementById('swap-options-container').innerHTML = '';
+        playSynthSound('fanfare');
+        speakElephant("Brilliant! Now cure silly mistakes in Level 3: Sentence Doctor!");
+        return;
+      }
+
+      const q = swapQuestions[swapCurrentIdx];
+      document.getElementById('swap-counter').textContent = `Question ${swapCurrentIdx + 1} of ${swapQuestions.length}`;
+      document.getElementById('swap-context').innerHTML = q.context.replace(`( ${q.targetWord} )`, `<span class="bg-yellow-200 px-3 py-1 rounded-xl text-amber-900 border-2 border-dashed border-amber-400 font-black cursor-pointer inline-block animate-pulse">( ${q.targetWord} )</span>`);
+      
+      const optContainer = document.getElementById('swap-options-container');
+      optContainer.innerHTML = '';
+
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "py-3 rounded-2xl bg-white hover:bg-indigo-50 border-2 border-indigo-200 font-extrabold text-lg text-indigo-700 shadow-sm transition-transform active:scale-95";
+        btn.textContent = opt;
+        btn.onclick = () => checkSwapAnswer(opt, q);
+        optContainer.appendChild(btn);
+      });
+
+      const fb = document.getElementById('swap-feedback');
+      fb.classList.add('hidden');
+    }
+
+    function checkSwapAnswer(selected, q) {
+      const fb = document.getElementById('swap-feedback');
+      fb.classList.remove('hidden', 'text-emerald-600', 'text-rose-600');
+
+      if (selected === q.correct) {
+        playSynthSound('ding');
+        fb.classList.add('text-emerald-600');
+        fb.innerHTML = `✅ Bingo! ${q.explanation}`;
+        addStars(1);
+        speakText(`Correct! ${q.correct}!`);
+        setTimeout(() => {
+          swapCurrentIdx++;
+          loadSwapQuestion();
+        }, 1500);
+      } else {
+        playSynthSound('boing');
+        fb.classList.add('text-rose-600');
+        fb.innerHTML = `❌ Not quite! Can "${selected}" stand after the verb? Try again!`;
+        speakText(`Try again! "${selected}" cannot stand after the verb.`);
+      }
+    }
+
+    function speakCurrentSwapQuestion() {
+      const q = swapQuestions[swapCurrentIdx];
+      speakText(q.context.replace(/[()]/g, ''));
+    }
+
+    /* --- Level 3: Sentence Doctor --- */
+    const doctorPatients = [
+      {
+        words: ['Miss Li', 'helps', 'we.'],
+        sickIndex: 2, // 'we.'
+        cureOptions: ['us', 'our', 'they'],
+        correctCure: 'us',
+        healedSentence: 'Miss Li helps us.'
+      },
+      {
+        words: ['Mr Wu', 'teaches', 'he', 'Maths.'],
+        sickIndex: 2, // 'he'
+        cureOptions: ['him', 'his', 'they'],
+        correctCure: 'him',
+        healedSentence: 'Mr Wu teaches him Maths.'
+      },
+      {
+        words: ['Her', 'is', 'my', 'Music', 'teacher.'],
+        sickIndex: 0, // 'Her'
+        cureOptions: ['She', 'They', 'Us'],
+        correctCure: 'She',
+        healedSentence: 'She is my Music teacher.'
+      }
+    ];
+
+    let doctorCurrentIdx = 0;
+
+    function initDoctorGame() {
+      doctorCurrentIdx = 0;
+      loadDoctorPatient();
+    }
+
+    function loadDoctorPatient() {
+      const choiceBox = document.getElementById('doctor-cure-choices');
+      const fb = document.getElementById('doctor-feedback');
+      choiceBox.classList.add('hidden');
+      fb.classList.add('hidden');
+
+      if (doctorCurrentIdx >= doctorPatients.length) {
+        document.getElementById('doctor-sentence-container').innerHTML = `
+          <div class="text-emerald-700 font-extrabold text-xl p-4 bg-emerald-100 rounded-2xl">
+            🏆 All sentences cured! You are officially a Master Pronoun Doctor!
+          </div>
+        `;
+        playSynthSound('fanfare');
+        speakElephant("Congratulations! All sentences are healed! You are an expert Detective!");
+        return;
+      }
+
+      const patient = doctorPatients[doctorCurrentIdx];
+      document.getElementById('doctor-counter').textContent = `Patient ${doctorCurrentIdx + 1} of ${doctorPatients.length}`;
+
+      const container = document.getElementById('doctor-sentence-container');
+      container.innerHTML = '';
+
+      patient.words.forEach((w, idx) => {
+        const span = document.createElement('span');
+        span.className = "cursor-pointer px-3 py-1.5 rounded-xl border border-transparent hover:border-slate-300 hover:bg-slate-100 transition-all text-slate-800";
+        span.textContent = w;
+
+        span.onclick = () => {
+          if (idx === patient.sickIndex) {
+            playSynthSound('ding');
+            span.classList.add('bg-rose-200', 'border-rose-400', 'text-rose-900', 'animate-wiggle');
+            openCureBox(patient);
+            speakText(`You found the sick word: ${w}! Now pick the cure.`);
+          } else {
+            playSynthSound('boing');
+            speakText(`"${w}" is healthy! Look for the wrong pronoun.`);
+          }
+        };
+
+        container.appendChild(span);
+      });
+    }
+
+    function openCureBox(patient) {
+      const box = document.getElementById('doctor-cure-choices');
+      const btnContainer = document.getElementById('cure-buttons');
+      btnContainer.innerHTML = '';
+
+      patient.cureOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-base rounded-xl shadow transition-transform active:scale-95";
+        btn.textContent = opt;
+        btn.onclick = () => applyCure(opt, patient);
+        btnContainer.appendChild(btn);
+      });
+
+      box.classList.remove('hidden');
+    }
+
+    function applyCure(chosen, patient) {
+      const fb = document.getElementById('doctor-feedback');
+      fb.classList.remove('hidden');
+
+      if (chosen.toLowerCase() === patient.correctCure.toLowerCase()) {
+        playSynthSound('ding');
+        addStars(2);
+        fb.className = "mt-3 text-sm font-bold text-emerald-600";
+        fb.innerHTML = `🩺 Cured! The correct sentence is: "<b>${patient.healedSentence}</b>"`;
+        speakText(patient.healedSentence);
+        setTimeout(() => {
+          doctorCurrentIdx++;
+          loadDoctorPatient();
+        }, 1800);
+      } else {
+        playSynthSound('boing');
+        fb.className = "mt-3 text-sm font-bold text-rose-600";
+        fb.innerHTML = `⚠️ Oops! "${chosen}" does not fit here. Try another medicine!`;
+      }
+    }
+
+    function speakDoctorSentence() {
+      const patient = doctorPatients[doctorCurrentIdx];
+      if (patient) {
+        speakText(patient.words.join(' '));
+      }
+    }
+
+    /* ========================================================
+       8. INITIALIZATION ON LOAD
+       ======================================================== */
+    window.onload = function() {
+      renderMagnetCards();
+      setTrainScenario(0);
+      initSortingGame();
+      initSwapGame();
+      initDoctorGame();
+
+      // Greeting speech synthesis on initial interaction
+      setTimeout(() => {
+        speakElephant("Hello detectives! Drag pronoun cards into the blue engine or yellow caboose to discover where they belong!");
+      }, 600);
+    };
+  </script>
+</body>
+</html>
